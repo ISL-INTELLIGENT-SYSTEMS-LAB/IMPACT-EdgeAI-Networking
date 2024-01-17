@@ -70,29 +70,25 @@ def get_server_address():
     Returns:
     str: The chosen IP address.
     """
-    network = get_network_cidr(interface_name='wlan0')
-    # Scan the network for devices
-    nm = nmap.PortScanner()
-    # Scan the network for devices
-    nm.scan(hosts=network, arguments='-sn')
-    # Get the IP addresses of all devices in the network
-    ips = [host for host in nm.all_hosts()]
-    # Print a message before the list of IP addresses
-    print(f"\n*** Found {len(ips)} devices in your network. ***\n"
-        "Please select a Server IP from the following list:")
-    # Prompt the user to choose an IP address
-    for i, ip in enumerate(ips):
-        print(f"\t{i + 1}) {ip}")
-    choice = int(input("Enter a Server IP address list number: ")) - 1
-    # Assign the chosen IP address
-    ip_address = ips[choice]
-    # Assign the port number
-    port = 16666
-    # Get the client's IP address and print it to the console
-    client_ip = get_client_ip()
-    # Print the client's IP address and the server's IP address to the console
-    print(f"\nClient IP: {client_ip}, Server IP: {ip_address}")
-    return (ip_address, port)
+    while True:
+        network = get_network_cidr(interface_name='wlan0')
+        nm = nmap.PortScanner()
+        nm.scan(hosts=network, arguments='-sn')
+        ips = [host for host in nm.all_hosts()]
+        print(f"\n*** Found {len(ips)} devices in your network. ***\n"
+            "Please select a Server IP from the following list or press 's' to scan again:")
+        for i, ip in enumerate(ips):
+            print(f"\t{i + 1}) {ip}")
+        choice = input("Enter a Server IP address list number or 's' to scan again: ")
+        if choice.lower() == 's':
+            continue
+        else:
+            choice = int(choice) - 1
+            ip_address = ips[choice]
+            port = 16666
+            client_ip = get_client_ip()
+            print(f"\nClient IP: {client_ip}, Server IP: {ip_address}")
+            return (ip_address, port)
 
 
 # Function to create a base directory for the collected data
@@ -105,19 +101,19 @@ def create_collection_directory():
 n
 n
     Returns:
-    str: The absolute path to the 'collection' directory.
+    str: The absolute path to the 'IMPACT_Collection' directory.
 
     The function first gets the path to the current user's home directory using the 'os.path.expanduser("~")' function and appends 'Documents' to it.
-    It then appends 'collection' to this path to get the path to the 'collection' directory.
-    The 'os.makedirs' function is used to create the 'collection' directory. The 'exist_ok=True' argument means that the function will not raise an error if the directory already exists.
+    It then appends 'IMPACT_Collection' to this path to get the path to the 'IMPACT_Collection' directory.
+    The 'os.makedirs' function is used to create the 'IMPACT_Collection' directory. The 'exist_ok=True' argument means that the function will not raise an error if the directory already exists.
     The function then prints a message to the console indicating where the collected data will be stored.
-    Finally, the function returns the path to the 'collection' directory.
+    Finally, the function returns the path to the 'IMPACT_Collection' directory.
     """
     # Define the base directory path
     base_dir_path = os.path.join(os.path.expanduser("~"), "Documents")
-    # Create a path to the 'collection' directory
-    collection_dir_path = os.path.join(base_dir_path, 'collection')
-    # Create the 'collection' directory if it doesn't exist
+    # Create a path to the 'IMPACT_Collection' directory
+    collection_dir_path = os.path.join(base_dir_path, 'IMPACT_Collection')
+    # Create the 'IMPACT_Collection' directory if it doesn't exist
     os.makedirs(collection_dir_path, exist_ok=True)
     # Return the path
     return collection_dir_path
@@ -155,28 +151,20 @@ def create_experiment_directory():
     return experiment_dir_path
 
 
-# Function to format the filename for the current experiment
-def format_filename(trans, rot):
+def create_filename():
     """
-    Formats the filename for the current experiment.
-
-    Parameters:
-    trans (tuple): A tuple containing the x, y, and z coordinates of the position.
-    rot (tuple): A tuple containing the roll, pitch, and yaw angles of the rotation.
+    Creates the filename for the current experiment.
 
     Returns:
-    str: The formatted filename.
+    str: The filename.
 
     The function first gets the current time in the 'US/Eastern' timezone using the 'datetime.now' function and formats it as 'HH:MM:SS' using the 'strftime' method.
-    It then creates the filename by joining the string 'collection_' with the current time, the position coordinates, and the rotation angles.
-    The position coordinates and rotation angles are formatted as floating-point numbers with 2 decimal places.
-    The position coordinates are prefixed with 'pos_' and separated by hyphens, and the rotation angles are prefixed with '+rot_' and separated by hyphens.
-    Finally, the function returns the formatted filename.
+    It then returns the filename.
     """
     # Get the current time
     timestamp = datetime.now(pytz.timezone('US/Eastern')).strftime("%H:%M:%S")
-    # Return the formatted filename
-    return f'collection_{timestamp}_pos_{trans[0]: .2f}-{trans[1]: .2f}-{trans[2]: .2f}+rot_{rot[0]: .2f}-{rot[1]: .2f}-{rot[2]: .2f}'
+    # Return the filename
+    return f'{timestamp}'
 
 
 # Function to initialize the camera and set its parameters
@@ -423,8 +411,8 @@ def capture_data(zed, dir_path, runtime_params, objects, obj_runtime_param, poin
                 # Get the camera's translation and rotation
                 trans = cam_w_pose.get_translation().get()
                 rot = cam_w_pose.get_euler_angles()
-                # Format the filename using the camera's translation and rotation
-                filename = format_filename(trans, rot)
+                # Creates the filename
+                filename = create_filename()
                 # Retrieve the point cloud from the ZED camera
                 zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA, sl.MEM.CPU, display_resolution)
                 # Write the point cloud to a file
@@ -441,7 +429,6 @@ def capture_data(zed, dir_path, runtime_params, objects, obj_runtime_param, poin
     return None, None
 
 
-# Function to process detected objects and return a DataFrame with their information
 def process_objects(objects, cam_w_pose):
     """
     Processes the detected objects and returns a DataFrame with their information.
@@ -452,13 +439,6 @@ def process_objects(objects, cam_w_pose):
 
     Returns:
     pd.DataFrame: A DataFrame containing the information of the detected objects.
-
-    The function first creates a new DataFrame with columns for the class, class confidence, label, ID, object position, object dimensions, 2D bounding box, 3D bounding box, distance from the camera, and camera position.
-    It then prints the number of detected objects.
-    If objects were detected, it iterates over each object, gets the object's position, calculates the straight line distance from the camera to the object, and creates a dictionary with the object's information.
-    The dictionary is then added to the DataFrame.
-    Finally, the function returns the DataFrame.
-    If no objects were detected, it returns an empty DataFrame.
     """
     # Create a new DataFrame with the specified columns
     df = pd.DataFrame(columns=['Class','Class Confidence', 'Label', 'Id', 'Object_Position', 'Object_Dimensions', '2D_Bounding_Box', '3D_Bounding_Box', 'Distance_From_Camera', 'Camera_Position'])
@@ -472,6 +452,8 @@ def process_objects(objects, cam_w_pose):
             position = obj.position
             # Calculate the straight line distance from the camera to the object
             straight = math.sqrt(position[0]**2 + position[2]**2)
+            # Get the camera pose data
+            pose_data = cam_w_pose.pose_data()
             # Create a dictionary with the object's information
             data = {'Class': obj.label, 'Class Confidence': obj.confidence,
                     'Label': obj.sublabel,
@@ -481,7 +463,10 @@ def process_objects(objects, cam_w_pose):
                     '2D_Bounding_Box': obj.bounding_box_2d,
                     '3D_Bounding_Box': obj.bounding_box,
                     'Distance_From_Camera': straight,
-                    'Camera_Position': cam_w_pose.pose_data()}
+                    'Camera_Position': {
+                        'Translation': {'tx': pose_data['tx'], 'ty': pose_data['ty'], 'tz': pose_data['tz']},
+                        'Orientation': {'ox': pose_data['ox'], 'oy': pose_data['oy'], 'oz': pose_data['oz'], 'ow': pose_data['ow']}
+                    }}
             # Add the dictionary to the DataFrame
             df.loc[len(df)] = data
     # Return the DataFrame
