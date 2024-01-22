@@ -164,7 +164,7 @@ def create_filename():
     # Get the current time
     timestamp = datetime.now(pytz.timezone('US/Eastern')).strftime("%H:%M:%S")
     # Return the filename
-    return f'{timestamp}'
+    return f'{timestamp}_data_transmission'
 
 
 # Function to initialize the camera and set its parameters
