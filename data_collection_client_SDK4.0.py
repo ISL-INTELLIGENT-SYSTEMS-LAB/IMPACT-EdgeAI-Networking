@@ -463,10 +463,7 @@ def process_objects(objects, cam_w_pose):
                     '2D_Bounding_Box': obj.bounding_box_2d,
                     '3D_Bounding_Box': obj.bounding_box,
                     'Distance_From_Camera': straight,
-                    'Camera_Position': {
-                        'Translation': {'tx': pose_data['tx'], 'ty': pose_data['ty'], 'tz': pose_data['tz']},
-                        'Orientation': {'ox': pose_data['ox'], 'oy': pose_data['oy'], 'oz': pose_data['oz'], 'ow': pose_data['ow']}
-                    }}
+                    'Camera_Position': cam_w_pose.pose_data()}
             # Add the dictionary to the DataFrame
             df.loc[len(df)] = data
     # Return the DataFrame
