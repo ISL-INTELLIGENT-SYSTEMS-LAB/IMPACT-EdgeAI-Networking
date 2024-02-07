@@ -39,18 +39,18 @@ def create_collection_dir():
     Parameters: None
     
     Returns:
-    str: The absolute path to the 'collection' directory.
+    str: The absolute path to the 'IMPACT_Collection' directory.
     
     The function first gets the path to the user's home directory using the os.path.expanduser function. 
-    It then creates a path to the 'collection' directory by joining the home directory path with the string 'collection'.
-    The os.makedirs function is used to create the 'collection' directory. The exist_ok parameter is set to True, 
+    It then creates a path to the 'IMPACT_Collection' directory by joining the home directory path with the string 'collection'.
+    The os.makedirs function is used to create the 'IMPACT_Collection' directory. The exist_ok parameter is set to True, 
     which means that the function will not raise an error if the directory already exists.
-    The path to the 'collection' directory is then printed to the console.
-    Finally, the function returns the path to the 'collection' directory.
+    The path to the 'IMPACT_Collection' directory is then printed to the console.
+    Finally, the function returns the path to the 'IMPACT_Collection' directory.
     """
     # Get the home directory
     home_dir = os.path.expanduser("~")
-    # Create a path to the 'collection' directory
+    # Create a path to the 'IMPACT_Collection' directory
     collection_dir_path = os.path.join(home_dir, 'IMPACT_Collection')
     # Create the directory if it doesn't exist
     os.makedirs(collection_dir_path, exist_ok=True)
